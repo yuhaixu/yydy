@@ -1,0 +1,103 @@
+<html>
+<head>
+    <title>美食记</title>
+    <style>
+        img
+        {
+            width: 80%;
+        }
+
+        p
+        {
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript" src="js/jquery-3.0.0.min.js"></script>
+    <script>
+        function loadImage(){
+            var id = GetQueryString("id")
+            $.ajax({
+                url:'http://192.168.0.5:8080/app/food/info',
+                contentType: "application/json",
+                dataType: 'json',
+                method: 'POST',
+                data:JSON.stringify({'info_id':id}),
+                success:function(data) {
+                    console.log(data);
+                    var fontE=document.createElement("font");
+                    var contentDiv = document.getElementById("contentDiv")
+                    var resultCo = data.result;
+                    if(resultCo.toString()=='1'){
+                        var dataStr = data.data;
+                        var contentStr = dataStr.content.toString();
+                        fontE.innerHTML = contentStr;
+                        var startPosition = contentStr.indexOf("[%");
+                        var endPosition = contentStr.indexOf("%]");
+
+                        var contentE = document.createElement("font");
+                        contentE.innerHTML = contentStr;
+                        contentDiv.appendChild(contentE);
+
+                        var brOneE = document.createElement("br");
+                        contentDiv.appendChild(brOneE);
+
+                        while (startPosition > 0){
+                            var showText = contentStr.substring(0, startPosition)
+                            var fontText = document.createElement("font");
+                            fontText.innerHTML = showText;
+                            contentDiv.appendChild(fontText);
+
+                            var brE = document.createElement("br");
+                            contentDiv.appendChild(brE);
+
+                            var pE = document.createElement("p");
+
+                            var imgUrl = contentStr.substring(startPosition + 2, endPosition);
+                            var imgE = document.createElement("img");
+                            imgE.src = imgUrl;
+                            pE.appendChild(imgE);
+                            contentDiv.appendChild(pE);
+
+                            var brTwoE = document.createElement("br");
+                            contentDiv.appendChild(brTwoE);
+
+                            contentStr = contentStr.substring(endPosition + 2);
+                            startPosition = contentStr.indexOf("[%");
+                            endPosition = contentStr.indexOf("%]");
+                            if(startPosition < 0){
+                                var lastFontE = document.createElement("font");
+                                lastFontE.innerHTML = contentStr;
+                                contentDiv.appendChild(lastFontE);
+                            }
+                        }
+                    } else {
+                        fontE.innerHTML = data.message;
+                        content.appendChild(fontE);
+                    }
+
+                },
+                error: function(xhr) {
+                    var fontE=document.createElement("font");
+                    fontE.innerHTML = "信息获取失败";
+                    var content = document.getElementById("contentDiv")
+                    content.appendChild(fontE);
+                }
+            });
+        }
+
+
+        function GetQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)","i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r!=null) return unescape(r[2]); return null;
+        }
+
+    </script>
+</head>
+<body onload="loadImage()" style="margin-left: 20px;margin-right: 20px">
+
+<div id="contentDiv" style="width: auto"></div>
+
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="requestMatcher" class="com.freesheep.web.protral.filter.AliyunRequestMatcher">
+        <property name="mappingPath">
+            <list>
+                <value>/web/.*</value>
+                <value>/admin/.*</value>
+            </list>
+        </property>
+
+        <property name="excludeMappingPath">
+            <list>
+                <value>/web/circle/single</value>
+                <value>/web/wx/getToken</value>
+                <value>/web/ali_pay/.*</value>
+                <value>/admin/login</value>
+                <value>/admin/send_order/.*</value>
+                <value>/admin/zt_send_order/.*</value>
+                <value>/admin/stockout/.*</value>
+                <value>/admin/into_warehouse/.*</value>
+                <value>/admin/return_order/.*</value>
+            </list>
+        </property>
+
+    </bean>
+    <bean id="csrfFilter" class="com.freesheep.web.protral.filter.AliyunCsrfFilter">
+        <constructor-arg>
+            <bean class="com.freesheep.web.protral.filter.AliyunCookieCsrfTokenRepository"/>
+        </constructor-arg>
+        <property name="requireCsrfProtectionMatcher" ref="requestMatcher"/>
+    </bean>
+
+
+</beans>

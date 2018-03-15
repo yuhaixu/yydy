@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <context:component-scan base-package="com.freesheep"/>
+    <!-- 静态资源(js、image等)的访问 -->
+    <mvc:default-servlet-handler/>
+    <!-- 启用spring mvc 注解 -->
+    <context:annotation-config/>
+
+    <!-- 定义跳转的文件的前后缀 ，视图模式配置-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <!-- <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>-->
+        <!-- 这里的配置是自动给后面action的方法return的字符串加上前缀和后缀，变成一个 可用的url地址 -->
+        <property name="prefix" value="/WEB-INF/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes" value = "text/html;charset=UTF-8" />
+            </bean>
+
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="objectMapper">
+                    <bean class="com.fasterxml.jackson.databind.ObjectMapper">
+                        <!-- 处理responseBody 里面日期类型 -->
+                        <property name="dateFormat">
+                            <bean class="java.text.SimpleDateFormat">
+                                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss"/>
+                            </bean>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <mvc:interceptors>
+        <!-- 针对web的拦截器 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/web/**"/>
+            <mvc:mapping path="/web/**/**"/>
+            <mvc:exclude-mapping path="/web/circle/single"/>
+            <mvc:exclude-mapping path="/web/login"/>
+            <mvc:exclude-mapping path="/web/wx/getToken"/>
+            <mvc:exclude-mapping path="/web/ali_pay/**"/>
+            <bean class="com.freesheep.web.interceptor.SignInterceptor"/>
+        </mvc:interceptor>
+        <!-- 针对App的拦截器 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/app/**"/>
+            <mvc:mapping path="/app/**/**"/>
+            <mvc:exclude-mapping path="/app/login"/>
+            <bean class="com.freesheep.web.interceptor.AppSignInterceptor"/>
+        </mvc:interceptor>
+        <!-- 针对device的拦截器 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/device/**"/>
+            <mvc:mapping path="/device/**/**"/>
+            <mvc:exclude-mapping path="/device/up_sheep_info"/>
+            <bean class="com.freesheep.web.interceptor.DeviceSignInterceptor"/>
+        </mvc:interceptor>
+        <!-- 针对管理控制台的拦截器 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/admin/**"/>
+            <mvc:mapping path="/admin/**/"/>
+            <mvc:mapping path="/admin/**/**"/>
+            <mvc:mapping path="/admin/**/**/"/>
+            <mvc:exclude-mapping path="/admin/login"/>
+            <mvc:exclude-mapping path="/admin/send_order/**"/>
+            <mvc:exclude-mapping path="/admin/zt_send_order/**"/>
+            <mvc:exclude-mapping path="/admin/stockout/**"/>
+            <mvc:exclude-mapping path="/admin/into_warehouse/**"/>
+            <mvc:exclude-mapping path="/admin/return_order/**"/>
+            <mvc:exclude-mapping path="/admin/food/**"/>
+            <mvc:exclude-mapping path="/admin/**/**"/>
+            <bean class="com.freesheep.web.interceptor.AdminSignInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!--配置MultipartResolver 用于文件上传 使用spring的CommonsMultipartResolver-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"
+          p:defaultEncoding="UTF-8"
+          p:maxUploadSize="204800"
+    >
+    </bean>
+    <!-- 配置国际化资源文件路径 -->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <!-- 定义消息资源文件的相对路径 -->
+        <property name="basenames">
+            <list>
+                <value>messages.message</value>
+            </list>
+        </property>
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="useCodeAsDefaultMessage" value="true"/>
+    </bean>
+    <bean id="localeResolver" class="org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver">
+        <property name="defaultLocale" value="en"/>
+        <property name="supportedLocales">
+            <list>
+                <value>zh_CN</value>
+                <value>en</value>
+            </list>
+        </property>
+    </bean>
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="validationMessageSource" ref="messageSource"/>
+    </bean>
+
+    <import resource="spring-mybatis.xml"/>
+
+
+</beans>
